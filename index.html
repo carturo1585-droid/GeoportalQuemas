@@ -113,7 +113,7 @@ async function cargarDatos(){
     filteredFeatures = [];
     const tempMin = Number(document.getElementById("tempSlider").value);
     const radMin = Number(document.getElementById("radSlider").value);
-    const response = await fetch("https://carturo1585-droid.github.io/GeoportalQuemas/datos.json");
+    const response = await fetch(WFS_URL);
     const geojson = await response.json();
 
     let total=0,tempMax=0,radMax=0,alta=0;
