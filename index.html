@@ -91,8 +91,12 @@ const map = L.map('map',{zoomControl:true}).setView([1.5,-74.5],7);
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OpenStreetMap'});
 const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri'});
 const sobrio = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'CartoDB'});
-satelite.addTo(map);
-L.control.layers({"Satélite":satelite,"OpenStreetMap":osm,"Cartografía Sobria":sobrio}).addTo(map);
+osm.addTo(map); // siempre carga OSM como base inicial
+satelite.addTo(map); // opcional, disponible en el control
+sobrio.addTo(map);   // opcional, disponible en el control
+L.control.layers(
+  {"OpenStreetMap": osm, "Satélite": satelite, "Cartografía Sobria": sobrio}
+).addTo(map);
 
 // Capa de clusters
 let clusterLayer = L.markerClusterGroup();
