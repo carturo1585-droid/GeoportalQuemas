@@ -18,4 +18,4 @@ Los datos pueden ser reemplazados o actualizados según nuevas fuentes en Postgr
 Este proyecto está bajo la licencia MIT.  
 Puedes usar, copiar, modificar y distribuir el código, siempre que se mantenga la atribución al autor original.
 
-Actualización para forzar despliegue
+Actualización para forzar despliegue 
