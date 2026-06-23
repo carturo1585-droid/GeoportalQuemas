@@ -99,7 +99,7 @@ let clusterLayer = L.markerClusterGroup();
 map.addLayer(clusterLayer);
 
 // URL del servicio WFS
-const WFS_URL = 'https://carturo1585-droid.github.io/GeoportalQuemas/datos.json';
+const WFS_URL = 'https://carturo1585-droid.github.io/GeoportalQuemas/datos.geojson';
 
 // Funciones auxiliares para color y tamaño
 function getColor(temp){if(temp>90) return '#7F0000';if(temp>70) return '#F44336';if(temp>50) return '#FF9800';return '#FFD54F';}
