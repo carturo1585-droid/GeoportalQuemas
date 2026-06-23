@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Recolección Quemas de la Cobertura Vegetal</title>
+
+<!-- Librerías Leaflet y estilos -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<style>
+/* Estilos generales */
+html,body{margin:0;padding:0;height:100%;font-family:"Segoe UI",sans-serif;background:#111;}
+#header{height:70px;background:#111;color:white;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;letter-spacing:1px;border-bottom:3px solid #ff6d00;}
+#container{display:flex;height:calc(100% - 70px);}
+#leftPanel{width:320px;background:rgba(20,20,20,.96);color:white;overflow:auto;padding:15px;box-sizing:border-box;border-right:2px solid #ff6d00;}
+#rightPanel{width:260px;background:rgba(20,20,20,.96);color:white;overflow:auto;padding:15px;box-sizing:border-box;border-left:2px solid #ff6d00;}
+#map{flex:1;}
+.panelTitle{font-size:18px;font-weight:bold;margin-bottom:10px;color:#ff9800;}
+.card{background:#222;border-left:4px solid #ff5722;padding:10px;margin-bottom:10px;border-radius:4px;}
+.stat{font-size:24px;font-weight:bold;color:#ffeb3b;}
+.legend-item{display:flex;align-items:center;margin-bottom:8px;}
+.legend-color{width:20px;height:20px;border-radius:50%;margin-right:10px;}
+.fire-marker{animation:pulse 2s infinite;}
+@keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.15);}100%{transform:scale(1);}}
+.filter-group{margin-top:15px;}
+input[type=range]{width:100%;}
+.leaflet-popup-content{font-size:13px;}
+</style>
+</head>
+
+<body>
+<div id="header">🔥 Recolección Quemas de la Cobertura Vegetal</div>
+<div id="container">
+
+<!-- Panel izquierdo: botones, indicadores y filtros -->
+<div id="leftPanel">
+<button onclick="cargarDatos()" style="width:100%;padding:10px;background:#ff6d00;border:none;color:white;font-weight:bold;cursor:pointer;">Actualizar Visor</button>
+<button onclick="descargarGeoJSON()" style="width:100%;padding:10px;background:#2196f3;border:none;color:white;font-weight:bold;cursor:pointer;">Descargar GeoJSON</button>
+<button onclick="descargarCSV()" style="width:100%;padding:10px;background:#4caf50;border:none;color:white;font-weight:bold;cursor:pointer;">Descargar CSV</button>
+
+<div class="panelTitle">Indicadores</div>
+<div class="card"><div>Total Eventos</div><div id="totalEventos" class="stat">0</div></div>
+<div class="card"><div>Temperatura Máxima</div><div id="tempMax" class="stat">0 °C</div></div>
+<div class="card"><div>Radiación Máxima</div><div id="radMax" class="stat">0 MW</div></div>
+<div class="card"><div>Confianza Alta</div><div id="alta" class="stat">0</div></div>
+
+<div class="panelTitle">Filtros</div>
+<div class="filter-group">
+Temperatura mínima: <span id="tempValue">40</span> °C
+<input type="range" id="tempSlider" min="40" max="120" value="40">
+</div>
+<br>
+<div class="filter-group">
+Radiación mínima: <span id="radValue">5</span> MW
+<input type="range" id="radSlider" min="0" max="50" value="5">
+</div>
+</div>
+
+<!-- Mapa principal -->
+<div id="map"></div>
+
+<!-- Panel derecho: leyenda e interpretación -->
+<div id="rightPanel">
+<div class="panelTitle">Leyenda Temperatura</div>
+<div class="legend-item"><div class="legend-color" style="background:#FFD54F"></div>40 - 50 °C</div>
+<div class="legend-item"><div class="legend-color" style="background:#FF9800"></div>50 - 70 °C</div>
+<div class="legend-item"><div class="legend-color" style="background:#F44336"></div>70 - 90 °C</div>
+<div class="legend-item"><div class="legend-color" style="background:#7F0000"></div>> 90 °C</div>
+<hr>
+<div class="panelTitle">Interpretación</div>
+<p>El tamaño del símbolo representa la intensidad de la radiación (MW).</p>
+<p>El color representa la temperatura detectada por el sensor satelital.</p>
+<p>Los clusters agrupan eventos cercanos.</p>
+</div>
+
+</div>
+
+<!-- Librerías JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+<script>
+// Inicialización del mapa
+const map = L.map('map',{zoomControl:true}).setView([1.5,-74.5],7);
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OpenStreetMap'});
+const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri'});
+const sobrio = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'CartoDB'});
+satelite.addTo(map);
+L.control.layers({"Satélite":satelite,"OpenStreetMap":osm,"Cartografía Sobria":sobrio}).addTo(map);
+
+// Capa de clusters
+let clusterLayer = L.markerClusterGroup();
+map.addLayer(clusterLayer);
+
+// URL del servicio WFS
+const WFS_URL = 'http://localhost:8081/geoserver/Quemas_Cobertura_Vegetal_CGM/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=Quemas_Cobertura_Vegetal_CGM:Puntos_Calor_1_enero_hasta_19_junio_2026_ok32618&outputFormat=application/json';
+
+// Funciones auxiliares para color y tamaño
+function getColor(temp){if(temp>90) return '#7F0000';if(temp>70) return '#F44336';if(temp>50) return '#FF9800';return '#FFD54F';}
+function getSize(rad){if(rad>50) return 32;if(rad>20) return 24;if(rad>10) return 18;return 12;}
+
+// Variable global para descargas
+let filteredFeatures = [];
+
+// Función principal para cargar datos
+async function cargarDatos(){
+    clusterLayer.clearLayers();
+    filteredFeatures = [];
+    const tempMin = Number(document.getElementById("tempSlider").value);
+    const radMin = Number(document.getElementById("radSlider").value);
+    const response = await fetch(WFS_URL);
+    const geojson = await response.json();
+
+    let total=0,tempMax=0,radMax=0,alta=0;
+
+    geojson.features.forEach(f=>{
+        const p = f.properties;
+        const temp = Number(p.Temperatur);
+        const rad = parseFloat(String(p["Radiación"]).replace(",","."));
+        if(temp < tempMin) return;
+        if(rad < radMin) return;
+        filteredFeatures.push(f);
+        total++;
+        if(temp>tempMax) tempMax=temp;
+        if(rad>radMax) radMax=rad;
+        if(String(p.Confianza).toUpperCase().includes("ALTA")) alta++;
+        const color = getColor(temp);
+        const size = getSize(rad);
+        const icon = L.divIcon({
+            html:`<div class="fire-marker" style="width:${size}px;height:${size}px;border-radius:50%;background:${color};box-shadow:0 0 10px ${color},0 0 20px ${color},0 0 35px ${color};border:2px solid white;"></div>`,
+            className:'',iconSize:[size,size]
+        });
+        const marker = L.marker([p.Lat,p.Lon],{icon});
+        marker.bindPopup(`
+            <b>Fecha:</b> ${p.fecha_utc}<br>
+            <b>Fuente:</b> ${p.Fuente}<br>
+            <b>Temperatura:</b> ${temp} °C<br>
+            <b>Radiación:</b> ${rad} MW<br>
+            <b>Confianza:</b> ${p.Confianza}<br>
+            <b>Área Escaneo:</b> ${p.scan_area}<br>
+            <b>Track:</b> ${p.track_re}
+        `);
+
+        // Tooltip con valores rápidos
+        marker.bindTooltip(`${temp} °C | ${rad} MW`,{direction:'top'});
+        clusterLayer.addLayer(marker);
+    });
+
+// Actualizar indicadores en panel
+    document.getElementById("totalEventos").innerHTML=total;
+    document.getElementById("tempMax").innerHTML=tempMax+" °C";
+    document.getElementById("radMax").innerHTML=radMax+" MW";
+    document.getElementById("alta").innerHTML=alta;
+}
+
+// Actualizar valores de sliders en tiempo real
+document.getElementById("tempSlider").addEventListener("input",e=>{
+    document.getElementById("tempValue").innerHTML=e.target.value;
+});
+document.getElementById("radSlider").addEventListener("input",e=>{
+    document.getElementById("radValue").innerHTML=e.target.value;
+});
+
+// Función para descargar como GeoJSON
+function descargarGeoJSON(){
+    if(filteredFeatures.length === 0){
+        alert("No hay datos filtrados para descargar.");
+        return;
+    }
+    const blob = new Blob([JSON.stringify({
+        type:"FeatureCollection",
+        features:filteredFeatures
+    })], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "datos_filtrados.geojson";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Función para descargar como CSV
+function descargarCSV(){
+    if(filteredFeatures.length === 0){
+        alert("No hay datos filtrados para descargar.");
+        return;
+    }
+    let csv = "Lat,Lon,Temperatura,Radiación,Confianza,Fecha,Fuente\n";
+    filteredFeatures.forEach(f=>{
+        const p = f.properties;
+        csv += `${p.Lat},${p.Lon},${p.Temperatur},${p["Radiación"]},${p.Confianza},${p.fecha_utc},${p.Fuente}\n`;
+    });
+    const blob = new Blob([csv], {type:"text/csv"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "datos_filtrados.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Cargar datos iniciales al abrir
+cargarDatos();
+</script>
+
+</body>
+</html>
