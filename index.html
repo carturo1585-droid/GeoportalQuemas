@@ -98,7 +98,7 @@ let clusterLayer = L.markerClusterGroup();
 map.addLayer(clusterLayer);
 
 // URL del servicio WFS
-const WFS_URL = 'http://localhost:8081/geoserver/Quemas_Cobertura_Vegetal_CGM/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=Quemas_Cobertura_Vegetal_CGM:Puntos_Calor_1_enero_hasta_19_junio_2026_ok32618&outputFormat=application/json';
+const WFS_URL = 'https://carturo1585-droid.github.io/GeoportalQuemas/datos.json';
 
 // Funciones auxiliares para color y tamaño
 function getColor(temp){if(temp>90) return '#7F0000';if(temp>70) return '#F44336';if(temp>50) return '#FF9800';return '#FFD54F';}
@@ -113,7 +113,7 @@ async function cargarDatos(){
     filteredFeatures = [];
     const tempMin = Number(document.getElementById("tempSlider").value);
     const radMin = Number(document.getElementById("radSlider").value);
-    const response = await fetch(WFS_URL);
+    const response = await fetch("https://carturo1585-droid.github.io/GeoportalQuemas/datos.json");
     const geojson = await response.json();
 
     let total=0,tempMax=0,radMax=0,alta=0;
