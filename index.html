@@ -3,8 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quemas de Coberturas Vegetales</title>
 
+<title>Quemas de Coberturas Vegetales </title>
+
+<!-- FAVICON INSTITUCIONAL -->
+<link rel="icon" href="data:,">
+
+<!-- Leaflet -->
 <link rel="stylesheet" href="libs/leaflet.css">
 <link rel="stylesheet" href="libs/MarkerCluster.css">
 <link rel="stylesheet" href="libs/MarkerCluster.Default.css">
@@ -13,119 +18,253 @@
 <script src="libs/leaflet.markercluster.js"></script>
 
 <style>
-html,body{margin:0;height:100%;font-family:Segoe UI;background:#111;color:#fff}
-#header{height:60px;background:#0f0f0f;display:flex;align-items:center;justify-content:center;
-font-size:20px;font-weight:700;border-bottom:3px solid #ff6d00}
 
-#container{display:flex;height:calc(100% - 60px)}
-#leftPanel,#rightPanel{width:280px;background:#151515;overflow:auto;padding:12px;box-sizing:border-box}
-#map{flex:1}
+/* =========================
+   ESTILO INSTITUCIONAL SIG
+========================= */
+html,body{
+margin:0;
+height:100%;
+font-family:Segoe UI, Arial;
+background:#0f1216;
+color:#eaeaea;
+}
 
-.card{background:#222;padding:10px;margin:8px 0;border-left:4px solid #ff6d00}
-.stat{font-size:22px;font-weight:bold;color:#ffeb3b}
-.panelTitle{margin-top:10px;font-weight:bold;color:#ff9800}
+#header{
+height:60px;
+background:#1b1f26;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:18px;
+font-weight:600;
+border-bottom:3px solid #ff8c00;
+letter-spacing:0.5px;
+}
 
-button{width:100%;padding:8px;margin-top:6px;border:none;cursor:pointer;font-weight:bold;color:#fff}
-.btn1{background:#ff6d00}
-.btn2{background:#2196f3}
-.btn3{background:#4caf50}
+/* LAYOUT */
+#container{
+display:flex;
+height:calc(100% - 60px);
+}
 
+/* PANELES */
+#leftPanel,#rightPanel{
+width:300px;
+background:#151a21;
+padding:12px;
+overflow:auto;
+border-right:1px solid #222;
+}
+
+#rightPanel{
+border-left:1px solid #222;
+border-right:none;
+}
+
+/* MAPA */
+#map{
+flex:1;
+}
+
+/* TARJETAS */
+.card{
+background:#1e2530;
+padding:12px;
+margin:10px 0;
+border-left:4px solid #ff8c00;
+border-radius:4px;
+}
+
+.stat{
+font-size:22px;
+font-weight:700;
+color:#ffd36a;
+}
+
+/* BOTONES */
+button{
+width:100%;
+padding:9px;
+margin-top:6px;
+border:none;
+cursor:pointer;
+font-weight:600;
+color:#fff;
+border-radius:3px;
+}
+
+.btn-primary{background:#ff8c00}
+.btn-blue{background:#2d7dd2}
+.btn-green{background:#3aa76d}
+
+/* SLIDERS */
 input[type=range]{width:100%}
 
-.legend-item{display:flex;align-items:center;margin:6px 0}
-.legend-color{width:16px;height:16px;border-radius:50%;margin-right:8px}
+/* LEYENDA */
+.legend-item{
+display:flex;
+align-items:center;
+margin:6px 0;
+font-size:13px;
+}
+
+.legend-color{
+width:14px;
+height:14px;
+border-radius:50%;
+margin-right:8px;
+}
+
+.loading{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:#000000cc;
+padding:20px;
+border-radius:6px;
+z-index:9999;
+}
 </style>
+
 </head>
 
 <body>
 
-<div id="header">🔥 Quemas de Coberturas Vegetales</div>
+<div id="header">
+🔥 Geoportal | Quemas de Cobertura Vegetal
+</div>
 
 <div id="container">
 
-<!-- IZQUIERDO -->
+<!-- PANEL IZQUIERDO -->
 <div id="leftPanel">
 
-<button class="btn1" onclick="render()">Actualizar Filtros</button>
-<button class="btn2" onclick="downloadGeoJSON()">Descargar GeoJSON</button>
-<button class="btn3" onclick="downloadCSV()">Descargar CSV</button>
+<button class="btn-primary" onclick="render()">Actualizar Vista SIG</button>
+<button class="btn-blue" onclick="downloadGeoJSON()">Exportar GeoJSON</button>
+<button class="btn-green" onclick="downloadCSV()">Exportar CSV</button>
 
-<div class="panelTitle">Indicadores</div>
-<div class="card">Total <div id="total" class="stat">0</div></div>
-<div class="card">Temp Máx <div id="tmax" class="stat">0</div></div>
-<div class="card">Rad Máx <div id="rmax" class="stat">0</div></div>
-<div class="card">Alta Confianza <div id="alta" class="stat">0</div></div>
+<div class="card">
+Total registros<br>
+<div id="total" class="stat">0</div>
+</div>
 
-<div class="panelTitle">Filtros</div>
+<div class="card">
+Temperatura máxima<br>
+<div id="tmax" class="stat">0</div>
+</div>
 
-<label>Temp mínima <span id="tval">40</span></label>
+<div class="card">
+Radiación máxima<br>
+<div id="rmax" class="stat">0</div>
+</div>
+
+<div class="card">
+Alta confianza<br>
+<div id="alta" class="stat">0</div>
+</div>
+
+<div class="card">
+<label>Temp mínima</label>
+<span id="tval">40</span>
 <input type="range" id="tmin" min="40" max="120" value="40">
+</div>
 
-<label>Radiación mínima <span id="rval">0</span></label>
+<div class="card">
+<label>Radiación mínima</label>
+<span id="rval">0</span>
 <input type="range" id="rmin" min="0" max="50" value="0">
+</div>
 
 </div>
 
 <!-- MAPA -->
 <div id="map"></div>
 
-<!-- DERECHO -->
+<!-- PANEL DERECHO -->
 <div id="rightPanel">
 
-<div class="panelTitle">Leyenda</div>
-<div class="legend-item"><div class="legend-color" style="background:#FFD54F"></div>40-50°C</div>
-<div class="legend-item"><div class="legend-color" style="background:#FF9800"></div>50-70°C</div>
-<div class="legend-item"><div class="legend-color" style="background:#F44336"></div>70-90°C</div>
-<div class="legend-item"><div class="legend-color" style="background:#7F0000"></div>>90°C</div>
+<div class="card">
+<div style="font-weight:600;color:#ffb347">Leyenda SIG</div>
+
+<div class="legend-item"><div class="legend-color" style="background:#ffd54f"></div>40–50 °C</div>
+<div class="legend-item"><div class="legend-color" style="background:#ff9800"></div>50–70 °C</div>
+<div class="legend-item"><div class="legend-color" style="background:#f44336"></div>70–90 °C</div>
+<div class="legend-item"><div class="legend-color" style="background:#7f0000"></div>>90 °C</div>
 
 </div>
 
 </div>
+
+</div>
+
+<!-- LOADER -->
+<div id="loader" class="loading">Cargando datos SIG...</div>
 
 <script>
 
-/* ================= MAPA ================= */
+/* =========================
+   MAPA SIG
+========================= */
 const map = L.map("map").setView([1.5,-74.5],7);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+attribution:"&copy; OSM"
+}).addTo(map);
 
 const cluster = L.markerClusterGroup();
 map.addLayer(cluster);
 
-/* ================= DATA ================= */
-const URL = "https://carturo1585-droid.github.io/GeoportalQuemas/datos.geojson";
+/* =========================
+   DATA
+========================= */
+const URL = "./datos.geojson";
 
 let geojsonCache = null;
 let filtered = [];
 
-/* ================= UTIL ================= */
-const getNum = v => {
-const n = Number(String(v).replace(",", "."));
-return isNaN(n) ? null : n;
+/* =========================
+   UTIL
+========================= */
+const num = v => {
+const n = Number(String(v).replace(",","."));
+return isNaN(n)?null:n;
 };
 
 const color = t => {
-if(t>90) return "#7F0000";
-if(t>70) return "#F44336";
-if(t>50) return "#FF9800";
-return "#FFD54F";
+if(t>90) return "#7f0000";
+if(t>70) return "#f44336";
+if(t>50) return "#ff9800";
+return "#ffd54f";
 };
 
-/* ================= LOAD ================= */
+/* =========================
+   LOAD SIG
+========================= */
 async function loadData(){
+
 try{
+
 const res = await fetch(URL);
 if(!res.ok) throw new Error("No se pudo cargar GeoJSON");
 
 geojsonCache = await res.json();
+
+document.getElementById("loader").style.display="none";
+
 render();
 
 }catch(err){
-alert("Error cargando datos: " + err.message);
+document.getElementById("loader").innerHTML="Error cargando datos SIG";
 console.error(err);
 }
+
 }
 
-/* ================= RENDER OPTIMIZADO ================= */
+/* =========================
+   RENDER SIG OPTIMIZADO
+========================= */
 function render(){
 
 if(!geojsonCache) return;
@@ -136,60 +275,64 @@ filtered = [];
 const tmin = Number(tminInput.value);
 const rmin = Number(rminInput.value);
 
-let total=0, tmax=-Infinity, rmax=-Infinity, alta=0;
+let total=0,tmax=-Infinity,rmax=-Infinity,alta=0;
 
 for(const f of geojsonCache.features){
 
 const c = f.geometry?.coordinates;
-if(!c || c.length < 2) continue;
+if(!c) continue;
 
-const lon = c[0];
-const lat = c[1];
+const lon=c[0],lat=c[1];
 
-let temp = getNum(f.properties?.Temperatura);
-let rad  = getNum(f.properties?.Radiacion);
+const temp=num(f.properties?.Temperatura);
+const rad=num(f.properties?.Radiacion);
 
 if(temp===null || rad===null) continue;
-if(temp < tmin || rad < rmin) continue;
+if(temp<tmin || rad<rmin) continue;
 
 total++;
-tmax = Math.max(tmax,temp);
-rmax = Math.max(rmax,rad);
+tmax=Math.max(tmax,temp);
+rmax=Math.max(rmax,rad);
 
 if(String(f.properties?.Confianza||"").toLowerCase().includes("alta")) alta++;
 
-const marker = L.circleMarker([lat,lon],{
-radius: rad>50?10:6,
-color: color(temp),
+const m=L.circleMarker([lat,lon],{
+radius:rad>50?9:6,
+color:color(temp),
 fillOpacity:0.8
 });
 
-marker.bindPopup(`<b>Temp:</b> ${temp}°C<br><b>Rad:</b> ${rad}`);
-cluster.addLayer(marker);
+m.bindPopup(`
+<b>Temperatura:</b> ${temp} °C<br>
+<b>Radiación:</b> ${rad}
+`);
 
+cluster.addLayer(m);
 filtered.push(f);
+
 }
 
 /* UI */
-totalEl.textContent = total;
-tmaxEl.textContent = isFinite(tmax)?tmax:0;
-rmaxEl.textContent = isFinite(rmax)?rmax:0;
-altaEl.textContent = alta;
+totalEl.textContent=total;
+tmaxEl.textContent=isFinite(tmax)?tmax:0;
+rmaxEl.textContent=isFinite(rmax)?rmax:0;
+altaEl.textContent=alta;
 
-/* zoom inteligente */
 if(cluster.getLayers().length){
 map.fitBounds(cluster.getBounds(),{padding:[20,20]});
 }
 
 }
 
-/* ================= DESCARGAS ================= */
+/* =========================
+   EXPORTS
+========================= */
 function downloadGeoJSON(){
 if(!filtered.length) return alert("Sin datos");
-const blob = new Blob([JSON.stringify({type:"FeatureCollection",features:filtered})]);
+const blob=new Blob([JSON.stringify({type:"FeatureCollection",features:filtered})]);
 const a=document.createElement("a");
 a.href=URL.createObjectURL(blob);
-a.download="filtrado.geojson";
+a.download="sig_quemas.geojson";
 a.click();
 }
 
@@ -197,6 +340,7 @@ function downloadCSV(){
 if(!filtered.length) return alert("Sin datos");
 
 let csv="lat,lon,temp,rad\n";
+
 for(const f of filtered){
 const c=f.geometry.coordinates;
 csv+=`${c[1]},${c[0]},${f.properties?.Temperatura||""},${f.properties?.Radiacion||""}\n`;
@@ -204,11 +348,13 @@ csv+=`${c[1]},${c[0]},${f.properties?.Temperatura||""},${f.properties?.Radiacion
 
 const a=document.createElement("a");
 a.href=URL.createObjectURL(new Blob([csv]));
-a.download="filtrado.csv";
+a.download="sig_quemas.csv";
 a.click();
 }
 
-/* ================= UI ================= */
+/* =========================
+   UI
+========================= */
 const tminInput=document.getElementById("tmin");
 const rminInput=document.getElementById("rmin");
 
@@ -223,7 +369,6 @@ const altaEl=document.getElementById("alta");
 tminInput.oninput=()=>{tval.textContent=tminInput.value;render();}
 rminInput.oninput=()=>{rval.textContent=rminInput.value;render();}
 
-/* INIT */
 window.addEventListener("load", loadData);
 
 </script>
