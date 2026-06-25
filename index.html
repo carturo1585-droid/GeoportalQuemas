@@ -18,25 +18,20 @@ html,body{margin:0;height:100%;font-family:Segoe UI;background:#111;color:#fff}
 font-size:20px;font-weight:700;border-bottom:3px solid #ff6d00}
 
 #container{display:flex;height:calc(100% - 60px)}
-#leftPanel,#rightPanel{
-width:280px;background:#151515;overflow:auto;padding:12px;box-sizing:border-box}
-
+#leftPanel,#rightPanel{width:280px;background:#151515;overflow:auto;padding:12px;box-sizing:border-box}
 #map{flex:1}
 
 .card{background:#222;padding:10px;margin:8px 0;border-left:4px solid #ff6d00}
 .stat{font-size:22px;font-weight:bold;color:#ffeb3b}
-
 .panelTitle{margin-top:10px;font-weight:bold;color:#ff9800}
 
-button{
-width:100%;padding:8px;margin-top:6px;border:none;
-cursor:pointer;font-weight:bold;color:#fff}
-
+button{width:100%;padding:8px;margin-top:6px;border:none;cursor:pointer;font-weight:bold;color:#fff}
 .btn1{background:#ff6d00}
 .btn2{background:#2196f3}
 .btn3{background:#4caf50}
 
 input[type=range]{width:100%}
+
 .legend-item{display:flex;align-items:center;margin:6px 0}
 .legend-color{width:16px;height:16px;border-radius:50%;margin-right:8px}
 </style>
@@ -48,7 +43,7 @@ input[type=range]{width:100%}
 
 <div id="container">
 
-<!-- PANEL IZQUIERDO -->
+<!-- IZQUIERDO -->
 <div id="leftPanel">
 
 <button class="btn1" onclick="render()">Actualizar Filtros</button>
@@ -56,7 +51,6 @@ input[type=range]{width:100%}
 <button class="btn3" onclick="downloadCSV()">Descargar CSV</button>
 
 <div class="panelTitle">Indicadores</div>
-
 <div class="card">Total <div id="total" class="stat">0</div></div>
 <div class="card">Temp Máx <div id="tmax" class="stat">0</div></div>
 <div class="card">Rad Máx <div id="rmax" class="stat">0</div></div>
@@ -75,11 +69,10 @@ input[type=range]{width:100%}
 <!-- MAPA -->
 <div id="map"></div>
 
-<!-- PANEL DERECHO -->
+<!-- DERECHO -->
 <div id="rightPanel">
 
 <div class="panelTitle">Leyenda</div>
-
 <div class="legend-item"><div class="legend-color" style="background:#FFD54F"></div>40-50°C</div>
 <div class="legend-item"><div class="legend-color" style="background:#FF9800"></div>50-70°C</div>
 <div class="legend-item"><div class="legend-color" style="background:#F44336"></div>70-90°C</div>
@@ -91,66 +84,48 @@ input[type=range]{width:100%}
 
 <script>
 
-/* =========================
-   MAPA
-========================= */
+/* ================= MAPA ================= */
 const map = L.map("map").setView([1.5,-74.5],7);
-
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
 const cluster = L.markerClusterGroup();
 map.addLayer(cluster);
 
-/* =========================
-   DATOS CACHE
-========================= */
+/* ================= DATA ================= */
 const URL = "./datos.geojson";
 
 let geojsonCache = null;
 let filtered = [];
 
-/* =========================
-   UTILIDADES
-========================= */
+/* ================= UTIL ================= */
 const getNum = v => {
-
-    if(v === undefined || v === null) return null;
-
-    const num = Number(
-        String(v)
-        .replace(",", ".")
-        .trim()
-    );
-
-    return isNaN(num) ? null : num;
+const n = Number(String(v).replace(",", "."));
+return isNaN(n) ? null : n;
 };
 
-function color(temp){
-if(temp>90) return "#7F0000";
-if(temp>70) return "#F44336";
-if(temp>50) return "#FF9800";
+const color = t => {
+if(t>90) return "#7F0000";
+if(t>70) return "#F44336";
+if(t>50) return "#FF9800";
 return "#FFD54F";
-}
+};
 
-/* =========================
-   CARGA INICIAL
-========================= */
+/* ================= LOAD ================= */
 async function loadData(){
+try{
+const res = await fetch(URL);
+if(!res.ok) throw new Error("No se pudo cargar GeoJSON");
 
-    if(geojsonCache) return;
+geojsonCache = await res.json();
+render();
 
-    const res = await fetch(URL);
-    geojsonCache = await res.json();
-
-    console.log("Features:", geojsonCache.features.length);
-    console.log("Primer registro:", geojsonCache.features[0].properties);
-
-    render();
+}catch(err){
+alert("Error cargando datos: " + err.message);
+console.error(err);
+}
 }
 
-/* =========================
-   RENDER (SIN FETCH)
-========================= */
+/* ================= RENDER OPTIMIZADO ================= */
 function render(){
 
 if(!geojsonCache) return;
@@ -165,28 +140,23 @@ let total=0, tmax=-Infinity, rmax=-Infinity, alta=0;
 
 for(const f of geojsonCache.features){
 
-const p = f.properties || {};
 const c = f.geometry?.coordinates;
+if(!c || c.length < 2) continue;
 
-if(!c) continue;
-
-const lat = c[1];
 const lon = c[0];
+const lat = c[1];
 
-let temp = getNum(p.Temperatura ?? p.Temperatur ?? p.temp);
-let rad  = getNum(p.Radiacion ?? p["Radiación"] ?? p.rad);
+let temp = getNum(f.properties?.Temperatura);
+let rad  = getNum(f.properties?.Radiacion);
 
 if(temp===null || rad===null) continue;
-if(temp<tmin || rad<rmin) continue;
-console.log("Temp:", temp, "Rad:", rad);
-console.log("Total filtrados:", total);
-console.log("Marcadores:", cluster.getLayers().length);   
-   
+if(temp < tmin || rad < rmin) continue;
+
 total++;
 tmax = Math.max(tmax,temp);
 rmax = Math.max(rmax,rad);
 
-if(String(p.Confianza||"").toLowerCase().includes("alta")) alta++;
+if(String(f.properties?.Confianza||"").toLowerCase().includes("alta")) alta++;
 
 const marker = L.circleMarker([lat,lon],{
 radius: rad>50?10:6,
@@ -194,11 +164,7 @@ color: color(temp),
 fillOpacity:0.8
 });
 
-marker.bindPopup(`
-<b>Temp:</b> ${temp}°C<br>
-<b>Rad:</b> ${rad}
-`);
-
+marker.bindPopup(`<b>Temp:</b> ${temp}°C<br><b>Rad:</b> ${rad}`);
 cluster.addLayer(marker);
 
 filtered.push(f);
@@ -210,17 +176,14 @@ tmaxEl.textContent = isFinite(tmax)?tmax:0;
 rmaxEl.textContent = isFinite(rmax)?rmax:0;
 altaEl.textContent = alta;
 
-console.log("Total filtrados:", total);
-console.log("Marcadores:", cluster.getLayers().length);
-   
+/* zoom inteligente */
 if(cluster.getLayers().length){
 map.fitBounds(cluster.getBounds(),{padding:[20,20]});
 }
+
 }
 
-/* =========================
-   DESCARGAS
-========================= */
+/* ================= DESCARGAS ================= */
 function downloadGeoJSON(){
 if(!filtered.length) return alert("Sin datos");
 const blob = new Blob([JSON.stringify({type:"FeatureCollection",features:filtered})]);
@@ -234,11 +197,9 @@ function downloadCSV(){
 if(!filtered.length) return alert("Sin datos");
 
 let csv="lat,lon,temp,rad\n";
-
 for(const f of filtered){
 const c=f.geometry.coordinates;
-const p=f.properties||{};
-csv+=`${c[1]},${c[0]},${p.Temperatura||""},${p.Radiacion||""}\n`;
+csv+=`${c[1]},${c[0]},${f.properties?.Temperatura||""},${f.properties?.Radiacion||""}\n`;
 }
 
 const a=document.createElement("a");
@@ -247,9 +208,7 @@ a.download="filtrado.csv";
 a.click();
 }
 
-/* =========================
-   SLIDERS (SIN RECARGA)
-========================= */
+/* ================= UI ================= */
 const tminInput=document.getElementById("tmin");
 const rminInput=document.getElementById("rmin");
 
@@ -265,10 +224,7 @@ tminInput.oninput=()=>{tval.textContent=tminInput.value;render();}
 rminInput.oninput=()=>{rval.textContent=rminInput.value;render();}
 
 /* INIT */
-window.addEventListener("load", async ()=>{
-await loadData();
-map.invalidateSize();
-});
+window.addEventListener("load", loadData);
 
 </script>
 
