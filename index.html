@@ -146,6 +146,9 @@ input[type=range]{width:100%;}
 </div>
 
 <script>
+
+let geojsonCache = null;
+    
 // Inicialización del mapa
 const map = L.map('map',{zoomControl:true}).setView([1.5,-74.5],7);
 
@@ -204,7 +207,10 @@ async function cargarDatos(){
         if(!response.ok){
             throw new Error("No se pudo cargar el GeoJSON");
         }
-
+        
+        geojsonCache = await response.json();
+        }
+       
         const geojson = await response.json();
         console.log("Primer registro:", geojson.features[0].properties);  
         console.log("Registros cargados:", geojson.features.length);
@@ -226,8 +232,8 @@ async function cargarDatos(){
                 String(p["Radiación"]).replace(",",".")
             );
 
-            //if(temp < tempMin) return;
-            //if(rad < radMin) return;
+            if(temp < tempMin) return;
+            if(rad < radMin) return;
 
             const coords = f.geometry.coordinates;
             const lon = coords[0];
@@ -328,12 +334,18 @@ async function cargarDatos(){
         );
     }
 }
+function aplicarFiltros() {
+    cargarDatos();
+}
 // Actualizar valores de sliders en tiempo real
 document.getElementById("tempSlider").addEventListener("input",e=>{
-    document.getElementById("tempValue").innerHTML=e.target.value;
+    document.getElementById("tempValue").innerHTML = e.target.value;
+    aplicarFiltros();
 });
+
 document.getElementById("radSlider").addEventListener("input",e=>{
-    document.getElementById("radValue").innerHTML=e.target.value;
+    document.getElementById("radValue").innerHTML = e.target.value;
+    aplicarFiltros();
 });
 
 // Función para descargar como GeoJSON
