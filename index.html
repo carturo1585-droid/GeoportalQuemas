@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Recolección Quemas de la Cobertura Vegetal</title>
+<title> Quemas de la Cobertura Vegetal</title>
 
 <link rel="stylesheet" href="libs/leaflet.css">
 <link rel="stylesheet" href="libs/MarkerCluster.css">
@@ -44,7 +44,7 @@ button{width:100%;padding:10px;margin-bottom:8px;border:none;cursor:pointer;font
 
 <body>
 
-<div id="header">🔥 Quemas de la Cobertura Vegetal</div>
+<div id="header">🔥Quemas de la Cobertura Vegetal</div>
 
 <div id="container">
 
@@ -73,8 +73,8 @@ Radiación mínima: <span id="radValue">0</span> MW
 <div class="panelTitle">Interpretación</div>
 <div class="card" style="font-size:12px;line-height:1.4;">
 Los filtros controlan qué eventos se muestran en el mapa.<br><br>
-✔ Temperatura → intensidad térmica del evento °C<br>
-✔ Radiación → energía detectada MW<br><br>
+✔ Temperatura °C → intensidad térmica del evento<br>
+✔ Radiación MW→ energía detectada<br><br>
 Los indicadores se recalculan dinámicamente según los filtros aplicados.
 </div>
 
@@ -189,20 +189,7 @@ border-radius:50%;background:${color(t)};
 box-shadow:0 0 15px ${color(t)}"></div>`
 });
 
-const marker = L.marker([lat,lon], {icon});
-
-marker.bindPopup(`
-    <b>Fecha:</b> ${p.fecha_utc || "N/A"}<br>
-    <b>Temperatura:</b> ${t} °C<br>
-    <b>Radiación:</b> ${r} MW<br>
-    <b>Confianza:</b> ${p.Confianza || "N/A"}<br><br>
-
-    <b>📍 Coordenadas:</b><br>
-    Lat: ${lat.toFixed(6)}<br>
-    Lon: ${lon.toFixed(6)}
-`);
-
-clusterLayer.addLayer(marker);
+clusterLayer.addLayer(L.marker([lat,lon],{icon}));
 });
 
 // UI
