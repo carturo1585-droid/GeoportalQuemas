@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title> Quemas de la Cobertura Vegetal</title>
+<title>Recolección Quemas de la Cobertura Vegetal</title>
 
 <link rel="stylesheet" href="libs/leaflet.css">
 <link rel="stylesheet" href="libs/MarkerCluster.css">
@@ -44,7 +44,7 @@ button{width:100%;padding:10px;margin-bottom:8px;border:none;cursor:pointer;font
 
 <body>
 
-<div id="header">🔥Quemas de la Cobertura Vegetal</div>
+<div id="header">🔥 Quemas de la Cobertura Vegetal</div>
 
 <div id="container">
 
@@ -64,18 +64,19 @@ button{width:100%;padding:10px;margin-bottom:8px;border:none;cursor:pointer;font
 
 <div class="panelTitle">Filtros</div>
 
-Temperatura mínima: <span id="tempValue">40</span> °C
+Temperatura mínima:
+<span id="tempValue">40</span> °C
 <input type="range" id="tempSlider" min="40" max="120" value="40">
 
-Radiación mínima: <span id="radValue">0</span> MW
+Radiación mínima:
+<span id="radValue">0</span> MW
 <input type="range" id="radSlider" min="0" max="50" value="0">
 
-<div class="panelTitle">Interpretación</div>
+<div class="panelTitle">Interpretación SIG</div>
 <div class="card" style="font-size:12px;line-height:1.4;">
-Los filtros controlan qué eventos se muestran en el mapa.<br><br>
-✔ Temperatura °C → intensidad térmica del evento<br>
-✔ Radiación MW→ energía detectada<br><br>
-Los indicadores se recalculan dinámicamente según los filtros aplicados.
+✔ Temperatura = intensidad térmica del evento<br>
+✔ Radiación = energía detectada<br>
+✔ Los indicadores se recalculan en tiempo real según filtros
 </div>
 
 </div>
@@ -86,20 +87,12 @@ Los indicadores se recalculan dinámicamente según los filtros aplicados.
 <!-- PANEL DERECHO -->
 <div id="rightPanel">
 
-<div class="panelTitle">Leyenda Temperatura</div>
+<div class="panelTitle">Leyenda</div>
 
 <div class="legend-item"><div class="legend-color" style="background:#FFD54F"></div>40–50 °C</div>
 <div class="legend-item"><div class="legend-color" style="background:#FF9800"></div>50–70 °C</div>
 <div class="legend-item"><div class="legend-color" style="background:#F44336"></div>70–90 °C</div>
 <div class="legend-item"><div class="legend-color" style="background:#7F0000"></div>> 90 °C</div>
-
-<hr>
-
-<p style="font-size:12px;">
-El tamaño del punto representa radiación.<br>
-El color representa temperatura.<br>
-Los clusters agrupan eventos cercanos.
-</p>
 
 </div>
 
@@ -111,7 +104,6 @@ let geojsonCache = null;
 let filteredFeatures = [];
 let clusterLayer;
 
-// MAPA
 const map = L.map('map',{zoomControl:true}).setView([1.5,-74.5],7);
 
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OSM'});
@@ -120,58 +112,56 @@ const soft = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y
 
 osm.addTo(map);
 
-// CLUSTER
 clusterLayer = L.markerClusterGroup();
 map.addLayer(clusterLayer);
 
-// CAPAS
 L.control.layers(
 { "OSM":osm,"Satélite":sat,"Claro":soft },
 { "Quemas":clusterLayer },
 {collapsed:false}
 ).addTo(map);
 
-// DATA
-const URL = "https://carturo1585-droid.github.io/GeoportalQuemas/datos.geojson";
+const DATA_URL = "https://carturo1585-droid.github.io/GeoportalQuemas/datos.geojson";
 
-// UTIL
-const color = t=>t>90?'#7F0000':t>70?'#F44336':t>50?'#FF9800':'#FFD54F';
-const size = r=>r>50?30:r>20?22:r>10?16:12;
+const color = t => t>90?'#7F0000':t>70?'#F44336':t>50?'#FF9800':'#FFD54F';
+const size = r => r>50?30:r>20?22:r>10?16:12;
 
-// CARGA
+function getUI(id){ return document.getElementById(id); }
+
 async function cargarDatos(){
 
 if(!geojsonCache){
-const r = await fetch(URL);
+const r = await fetch(DATA_URL);
 geojsonCache = await r.json();
 }
 
 aplicarFiltros();
 }
 
-// FILTROS
 function aplicarFiltros(){
+
+if(!geojsonCache?.features) return;
 
 clusterLayer.clearLayers();
 filteredFeatures = [];
 
-const tmin = +tempSlider.value;
-const rmin = +radSlider.value;
+const tmin = +getUI("tempSlider").value;
+const rmin = +getUI("radSlider").value;
 
 let total=0, tmax=-Infinity, rmax=-Infinity, alta=0;
 
 geojsonCache.features.forEach(f=>{
 
 const p=f.properties||{};
-const c=f.geometry?.coordinates;
-if(!c) return;
+const c=f.geometry?.coordinates||[];
 
 const lon=c[0], lat=c[1];
+if(!lat || !lon) return;
 
 const t=+String(p.Temperatur||0).replace(",",".");
 const r=+String(p["Radiación"]||0).replace(",",".");
 
-if(t<tmin||r<rmin) return;
+if(t<tmin || r<rmin) return;
 
 filteredFeatures.push(f);
 total++;
@@ -181,49 +171,70 @@ rmax=Math.max(rmax,r);
 
 if(String(p.Confianza||"").includes("ALTA")) alta++;
 
-const icon=L.divIcon({
+const marker = L.marker([lat,lon],{
+icon:L.divIcon({
 className:"",
 iconSize:[size(r),size(r)],
 html:`<div style="width:${size(r)}px;height:${size(r)}px;
 border-radius:50%;background:${color(t)};
-box-shadow:0 0 15px ${color(t)}"></div>`
+box-shadow:0 0 10px ${color(t)}"></div>`
+})
 });
 
-clusterLayer.addLayer(L.marker([lat,lon],{icon}));
+marker.bindPopup(`
+<b>Fecha:</b> ${p.fecha_utc || "N/A"}<br>
+<b>Temp:</b> ${t} °C<br>
+<b>Rad:</b> ${r} MW<br>
+<b>Confianza:</b> ${p.Confianza || "N/A"}<br><br>
+<b>Lat:</b> ${lat.toFixed(6)}<br>
+<b>Lon:</b> ${lon.toFixed(6)}
+`);
+
+clusterLayer.addLayer(marker);
 });
 
-// UI
-totalEventos.textContent=total;
-tempMax.textContent=(tmax<0?0:tmax)+" °C";
-radMax.textContent=(rmax<0?0:rmax)+" MW";
-alta.textContent=alta;
+getUI("totalEventos").textContent = total;
+getUI("tempMax").textContent = (tmax<0?0:tmax)+" °C";
+getUI("radMax").textContent = (rmax<0?0:rmax)+" MW";
+getUI("alta").textContent = alta;
 
-const b=clusterLayer.getBounds();
+// zoom solo en desktop
+if(window.innerWidth > 768){
+const b = clusterLayer.getBounds();
 if(b.isValid()) map.fitBounds(b,{padding:[20,20]});
 }
 
-// SLIDERS
-tempSlider.oninput=e=>{
-tempValue.textContent=e.target.value;
+}
+
+getUI("tempSlider").oninput = e=>{
+getUI("tempValue").textContent = e.target.value;
 aplicarFiltros();
 };
 
-radSlider.oninput=e=>{
-radValue.textContent=e.target.value;
+getUI("radSlider").oninput = e=>{
+getUI("radValue").textContent = e.target.value;
 aplicarFiltros();
 };
 
-// DESCARGA
 function descargarGeoJSON(){
+
 if(!filteredFeatures.length) return alert("Sin datos");
 
-const blob=new Blob([JSON.stringify({type:"FeatureCollection",features:filteredFeatures})]);
-const url=URL.createObjectURL(blob);
-const a=document.createElement("a");
-a.href=url;a.download="datos.geojson";a.click();
+const blob = new Blob([JSON.stringify({
+type:"FeatureCollection",
+features:filteredFeatures
+})]);
+
+const url = window.URL.createObjectURL(blob);
+const a = document.createElement("a");
+
+a.href = url;
+a.download = "quemas_filtradas.geojson";
+a.click();
 }
 
 function descargarCSV(){
+
 if(!filteredFeatures.length) return alert("Sin datos");
 
 let csv="Lat,Lon,Temp,Rad,Confianza\n";
@@ -234,13 +245,15 @@ const c=f.geometry.coordinates;
 csv+=`${c[1]},${c[0]},${p.Temperatur},${p["Radiación"]},${p.Confianza}\n`;
 });
 
-const blob=new Blob([csv]);
-const url=URL.createObjectURL(blob);
-const a=document.createElement("a");
-a.href=url;a.download="datos.csv";a.click();
+const blob = new Blob([csv]);
+const url = window.URL.createObjectURL(blob);
+
+const a = document.createElement("a");
+a.href = url;
+a.download = "quemas.csv";
+a.click();
 }
 
-// INIT
 cargarDatos();
 
 </script>
