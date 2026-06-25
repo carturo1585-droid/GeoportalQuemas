@@ -139,7 +139,7 @@ async function cargarDatos(){
     geojson.features.forEach(f=>{
         const p = f.properties;
         const temp = Number(p.Temperatur);
-        const rad = parseFloat(String(p.Radiacion).replace(",","."));
+        const rad = parseFloat(String(p["Radiación"]).replace(",","."));
         if(temp < tempMin) return;
         if(rad < radMin) return;
         filteredFeatures.push(f);
@@ -212,7 +212,7 @@ function descargarCSV(){
     let csv = "Lat,Lon,Temperatura,Radiación,Confianza,Fecha,Fuente\n";
     filteredFeatures.forEach(f=>{
         const p = f.properties;
-        csv += `${p.Lat},${p.Lon},${p.Temperat},${p.Radiacion},${p.Confianza},${p.fecha_utc},${p.Fuente}\n`;
+        csv += `${p.Lat},${p.Lon},${p.Temperatur},${p["Radiación"]},${p.Confianza},${p.fecha_utc},${p.Fuente}\n`;
     });
     const blob = new Blob([csv], {type:"text/csv"});
     const url = URL.createObjectURL(blob);
