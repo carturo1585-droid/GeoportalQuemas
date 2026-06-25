@@ -104,7 +104,7 @@ map.addLayer(cluster);
 /* =========================
    DATOS CACHE
 ========================= */
-const URL = "https://carturo1585-droid.github.io/GeoportalQuemas/datos.geojson";
+const URL = "./datos.geojson";
 
 let geojsonCache = null;
 let filtered = [];
@@ -112,7 +112,18 @@ let filtered = [];
 /* =========================
    UTILIDADES
 ========================= */
-const getNum = v => isNaN(Number(v)) ? null : Number(v);
+const getNum = v => {
+
+    if(v === undefined || v === null) return null;
+
+    const num = Number(
+        String(v)
+        .replace(",", ".")
+        .trim()
+    );
+
+    return isNaN(num) ? null : num;
+};
 
 function color(temp){
 if(temp>90) return "#7F0000";
@@ -130,7 +141,7 @@ if(geojsonCache) return;
 
 const res = await fetch(URL);
 geojsonCache = await res.json();
-
+console.log("Features:", geojsonCache.features.length);
 render();
 }
 
