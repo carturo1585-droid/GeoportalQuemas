@@ -229,8 +229,9 @@ async function cargarDatos(){
             //if(temp < tempMin) return;
             //if(rad < radMin) return;
 
-            const lat = Number(p.Lat);
-            const lon = Number(p.Lon);
+            const coords = f.geometry.coordinates;
+            const lon = coords[0];
+            const lat = coords[1];
 
             if(isNaN(lat) || isNaN(lon)) return;
 
