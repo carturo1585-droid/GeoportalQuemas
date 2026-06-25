@@ -4,12 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Quemas de Coberturas Vegetales </title>
+<title>Geoportal | Quemas de Cobertura Vegetal</title>
 
-<!-- FAVICON INSTITUCIONAL -->
 <link rel="icon" href="data:,">
 
-<!-- Leaflet -->
 <link rel="stylesheet" href="libs/leaflet.css">
 <link rel="stylesheet" href="libs/MarkerCluster.css">
 <link rel="stylesheet" href="libs/MarkerCluster.Default.css">
@@ -18,164 +16,51 @@
 <script src="libs/leaflet.markercluster.js"></script>
 
 <style>
-
-/* =========================
-   ESTILO INSTITUCIONAL SIG
-========================= */
-html,body{
-margin:0;
-height:100%;
-font-family:Segoe UI, Arial;
-background:#0f1216;
-color:#eaeaea;
-}
-
-#header{
-height:60px;
-background:#1b1f26;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:18px;
-font-weight:600;
-border-bottom:3px solid #ff8c00;
-letter-spacing:0.5px;
-}
-
-/* LAYOUT */
-#container{
-display:flex;
-height:calc(100% - 60px);
-}
-
-/* PANELES */
-#leftPanel,#rightPanel{
-width:300px;
-background:#151a21;
-padding:12px;
-overflow:auto;
-border-right:1px solid #222;
-}
-
-#rightPanel{
-border-left:1px solid #222;
-border-right:none;
-}
-
-/* MAPA */
-#map{
-flex:1;
-}
-
-/* TARJETAS */
-.card{
-background:#1e2530;
-padding:12px;
-margin:10px 0;
-border-left:4px solid #ff8c00;
-border-radius:4px;
-}
-
-.stat{
-font-size:22px;
-font-weight:700;
-color:#ffd36a;
-}
-
-/* BOTONES */
-button{
-width:100%;
-padding:9px;
-margin-top:6px;
-border:none;
-cursor:pointer;
-font-weight:600;
-color:#fff;
-border-radius:3px;
-}
-
+html,body{margin:0;height:100%;font-family:Segoe UI;background:#0f1216;color:#eaeaea}
+#header{height:60px;background:#1b1f26;display:flex;align-items:center;justify-content:center;
+font-size:18px;font-weight:600;border-bottom:3px solid #ff8c00}
+#container{display:flex;height:calc(100% - 60px)}
+#leftPanel,#rightPanel{width:300px;background:#151a21;padding:12px;overflow:auto}
+#map{flex:1}
+.card{background:#1e2530;padding:12px;margin:10px 0;border-left:4px solid #ff8c00}
+.stat{font-size:22px;font-weight:700;color:#ffd36a}
+button{width:100%;padding:9px;margin-top:6px;border:none;cursor:pointer;color:#fff}
 .btn-primary{background:#ff8c00}
 .btn-blue{background:#2d7dd2}
 .btn-green{background:#3aa76d}
-
-/* SLIDERS */
 input[type=range]{width:100%}
-
-/* LEYENDA */
-.legend-item{
-display:flex;
-align-items:center;
-margin:6px 0;
-font-size:13px;
-}
-
-.legend-color{
-width:14px;
-height:14px;
-border-radius:50%;
-margin-right:8px;
-}
-
+.legend-item{display:flex;align-items:center;margin:6px 0}
+.legend-color{width:14px;height:14px;border-radius:50%;margin-right:8px}
 .loading{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-background:#000000cc;
-padding:20px;
-border-radius:6px;
-z-index:9999;
+position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+background:#000000cc;padding:20px;border-radius:6px;z-index:9999;
 }
 </style>
-
 </head>
 
 <body>
 
-<div id="header">
-🔥 Geoportal | Quemas de Cobertura Vegetal
-</div>
+<div id="header">🔥 Geoportal SIG | Quemas de Cobertura Vegetal</div>
 
 <div id="container">
 
 <!-- PANEL IZQUIERDO -->
 <div id="leftPanel">
 
-<button class="btn-primary" onclick="render()">Actualizar Vista SIG</button>
+<button class="btn-primary" onclick="render()">Actualizar Vista</button>
 <button class="btn-blue" onclick="downloadGeoJSON()">Exportar GeoJSON</button>
 <button class="btn-green" onclick="downloadCSV()">Exportar CSV</button>
 
-<div class="card">
-Total registros<br>
-<div id="total" class="stat">0</div>
-</div>
+<div class="card">Total <div id="total" class="stat">0</div></div>
+<div class="card">Temp Máx <div id="tmax" class="stat">0</div></div>
+<div class="card">Rad Máx <div id="rmax" class="stat">0</div></div>
+<div class="card">Alta Confianza <div id="alta" class="stat">0</div></div>
 
-<div class="card">
-Temperatura máxima<br>
-<div id="tmax" class="stat">0</div>
-</div>
-
-<div class="card">
-Radiación máxima<br>
-<div id="rmax" class="stat">0</div>
-</div>
-
-<div class="card">
-Alta confianza<br>
-<div id="alta" class="stat">0</div>
-</div>
-
-<div class="card">
-<label>Temp mínima</label>
-<span id="tval">40</span>
+<label>Temp mínima <span id="tval">40</span></label>
 <input type="range" id="tmin" min="40" max="120" value="40">
-</div>
 
-<div class="card">
-<label>Radiación mínima</label>
-<span id="rval">0</span>
+<label>Radiación mínima <span id="rval">0</span></label>
 <input type="range" id="rmin" min="0" max="50" value="0">
-</div>
 
 </div>
 
@@ -186,32 +71,27 @@ Alta confianza<br>
 <div id="rightPanel">
 
 <div class="card">
-<div style="font-weight:600;color:#ffb347">Leyenda SIG</div>
-
-<div class="legend-item"><div class="legend-color" style="background:#ffd54f"></div>40–50 °C</div>
-<div class="legend-item"><div class="legend-color" style="background:#ff9800"></div>50–70 °C</div>
-<div class="legend-item"><div class="legend-color" style="background:#f44336"></div>70–90 °C</div>
-<div class="legend-item"><div class="legend-color" style="background:#7f0000"></div>>90 °C</div>
-
+<div style="color:#ffb347;font-weight:600">Leyenda SIG</div>
+<div class="legend-item"><div class="legend-color" style="background:#ffd54f"></div>40–50°C</div>
+<div class="legend-item"><div class="legend-color" style="background:#ff9800"></div>50–70°C</div>
+<div class="legend-item"><div class="legend-color" style="background:#f44336"></div>70–90°C</div>
+<div class="legend-item"><div class="legend-color" style="background:#7f0000"></div>>90°C</div>
 </div>
 
 </div>
 
 </div>
 
-<!-- LOADER -->
 <div id="loader" class="loading">Cargando datos SIG...</div>
 
 <script>
 
 /* =========================
-   MAPA SIG
+   MAPA
 ========================= */
 const map = L.map("map").setView([1.5,-74.5],7);
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-attribution:"&copy; OSM"
-}).addTo(map);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
 const cluster = L.markerClusterGroup();
 map.addLayer(cluster);
@@ -219,10 +99,24 @@ map.addLayer(cluster);
 /* =========================
    DATA
 ========================= */
-const URL = "./datos.geojson";
+const URL = "https://carturo1585-droid.github.io/GeoportalQuemas/datos.geojson";
 
 let geojsonCache = null;
 let filtered = [];
+
+/* =========================
+   FIX: VARIABLES SIEMPRE ARRIBA
+========================= */
+const tminInput = document.getElementById("tmin");
+const rminInput = document.getElementById("rmin");
+
+const tval = document.getElementById("tval");
+const rval = document.getElementById("rval");
+
+const totalEl = document.getElementById("total");
+const tmaxEl = document.getElementById("tmax");
+const rmaxEl = document.getElementById("rmax");
+const altaEl = document.getElementById("alta");
 
 /* =========================
    UTIL
@@ -240,30 +134,29 @@ return "#ffd54f";
 };
 
 /* =========================
-   LOAD SIG
+   LOAD (ROBUSTO)
 ========================= */
 async function loadData(){
-
 try{
-
 const res = await fetch(URL);
-if(!res.ok) throw new Error("No se pudo cargar GeoJSON");
+if(!res.ok) throw new Error("Error cargando GeoJSON");
 
 geojsonCache = await res.json();
 
 document.getElementById("loader").style.display="none";
 
+console.log("GeoJSON cargado:", geojsonCache.features.length);
+
 render();
 
 }catch(err){
-document.getElementById("loader").innerHTML="Error cargando datos SIG";
 console.error(err);
+document.getElementById("loader").innerHTML="Error cargando datos SIG";
 }
-
 }
 
 /* =========================
-   RENDER SIG OPTIMIZADO
+   RENDER (PROTEGIDO)
 ========================= */
 function render(){
 
@@ -280,7 +173,7 @@ let total=0,tmax=-Infinity,rmax=-Infinity,alta=0;
 for(const f of geojsonCache.features){
 
 const c = f.geometry?.coordinates;
-if(!c) continue;
+if(!Array.isArray(c) || c.length<2) continue;
 
 const lon=c[0],lat=c[1];
 
@@ -303,13 +196,12 @@ fillOpacity:0.8
 });
 
 m.bindPopup(`
-<b>Temperatura:</b> ${temp} °C<br>
-<b>Radiación:</b> ${rad}
+<b>Temp:</b> ${temp} °C<br>
+<b>Rad:</b> ${rad}
 `);
 
 cluster.addLayer(m);
 filtered.push(f);
-
 }
 
 /* UI */
@@ -318,7 +210,8 @@ tmaxEl.textContent=isFinite(tmax)?tmax:0;
 rmaxEl.textContent=isFinite(rmax)?rmax:0;
 altaEl.textContent=alta;
 
-if(cluster.getLayers().length){
+/* FIX CRÍTICO: fitBounds seguro */
+if(cluster.getLayers().length>0 && cluster.getBounds().isValid()){
 map.fitBounds(cluster.getBounds(),{padding:[20,20]});
 }
 
@@ -332,7 +225,7 @@ if(!filtered.length) return alert("Sin datos");
 const blob=new Blob([JSON.stringify({type:"FeatureCollection",features:filtered})]);
 const a=document.createElement("a");
 a.href=URL.createObjectURL(blob);
-a.download="sig_quemas.geojson";
+a.download="quemas.geojson";
 a.click();
 }
 
@@ -348,27 +241,28 @@ csv+=`${c[1]},${c[0]},${f.properties?.Temperatura||""},${f.properties?.Radiacion
 
 const a=document.createElement("a");
 a.href=URL.createObjectURL(new Blob([csv]));
-a.download="sig_quemas.csv";
+a.download="quemas.csv";
 a.click();
 }
 
 /* =========================
-   UI
+   DEBOUNCE (FIX PERFORMANCE)
 ========================= */
-const tminInput=document.getElementById("tmin");
-const rminInput=document.getElementById("rmin");
+let timeout;
 
-const tval=document.getElementById("tval");
-const rval=document.getElementById("rval");
+tminInput.oninput = () => {
+tval.textContent = tminInput.value;
+clearTimeout(timeout);
+timeout = setTimeout(render, 150);
+};
 
-const totalEl=document.getElementById("total");
-const tmaxEl=document.getElementById("tmax");
-const rmaxEl=document.getElementById("rmax");
-const altaEl=document.getElementById("alta");
+rminInput.oninput = () => {
+rval.textContent = rminInput.value;
+clearTimeout(timeout);
+timeout = setTimeout(render, 150);
+};
 
-tminInput.oninput=()=>{tval.textContent=tminInput.value;render();}
-rminInput.oninput=()=>{rval.textContent=rminInput.value;render();}
-
+/* INIT */
 window.addEventListener("load", loadData);
 
 </script>
