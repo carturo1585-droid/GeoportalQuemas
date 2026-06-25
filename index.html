@@ -208,10 +208,9 @@ async function cargarDatos(){
             throw new Error("No se pudo cargar el GeoJSON");
         }
         
-        geojsonCache = await response.json();
-        }
-       
         const geojson = await response.json();
+        geojsonCache = geojson;
+        
         console.log("Primer registro:", geojson.features[0].properties);  
         console.log("Registros cargados:", geojson.features.length);
 
