@@ -3,396 +3,253 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Quemas Vegetales</title>
 
-<title>Recolección Quemas de la Cobertura Vegetal</title>
-
-<!-- Librerías Leaflet y estilos -->
 <link rel="stylesheet" href="libs/leaflet.css">
 <link rel="stylesheet" href="libs/MarkerCluster.css">
 <link rel="stylesheet" href="libs/MarkerCluster.Default.css">
-<link rel="stylesheet" href="libs/all.min.css">
 
 <script src="libs/leaflet.js"></script>
 <script src="libs/leaflet.markercluster.js"></script>
 
 <style>
-/* Estilos generales */
-html,body{margin:0;padding:0;height:100%;font-family:"Segoe UI",sans-serif;background:#111;}
-#header{height:70px;background:#111;color:white;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;letter-spacing:1px;border-bottom:3px solid #ff6d00;}
-#container{display:flex;height:calc(100% - 70px);}
-#leftPanel{width:320px;background:rgba(20,20,20,.96);color:white;overflow:auto;padding:15px;box-sizing:border-box;border-right:2px solid #ff6d00;}
-#rightPanel{width:260px;background:rgba(20,20,20,.96);color:white;overflow:auto;padding:15px;box-sizing:border-box;border-left:2px solid #ff6d00;}
-#map{
-    flex:1;
-    height:100%;
-    min-height:600px;
-}
-.panelTitle{font-size:18px;font-weight:bold;margin-bottom:10px;color:#ff9800;}
-.card{background:#222;border-left:4px solid #ff5722;padding:10px;margin-bottom:10px;border-radius:4px;}
-.stat{font-size:24px;font-weight:bold;color:#ffeb3b;}
-.legend-item{display:flex;align-items:center;margin-bottom:8px;}
-.legend-color{width:20px;height:20px;border-radius:50%;margin-right:10px;}
-.fire-marker{animation:pulse 2s infinite;}
-@keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.15);}100%{transform:scale(1);}}
-.filter-group{margin-top:15px;}
-input[type=range]{width:100%;}
-.leaflet-popup-content{font-size:13px;}
+html,body{margin:0;height:100%;font-family:Segoe UI;background:#111;color:#fff}
+#header{height:60px;background:#0f0f0f;display:flex;align-items:center;justify-content:center;
+font-size:20px;font-weight:700;border-bottom:3px solid #ff6d00}
+
+#container{display:flex;height:calc(100% - 60px)}
+#leftPanel,#rightPanel{
+width:280px;background:#151515;overflow:auto;padding:12px;box-sizing:border-box}
+
+#map{flex:1}
+
+.card{background:#222;padding:10px;margin:8px 0;border-left:4px solid #ff6d00}
+.stat{font-size:22px;font-weight:bold;color:#ffeb3b}
+
+.panelTitle{margin-top:10px;font-weight:bold;color:#ff9800}
+
+button{
+width:100%;padding:8px;margin-top:6px;border:none;
+cursor:pointer;font-weight:bold;color:#fff}
+
+.btn1{background:#ff6d00}
+.btn2{background:#2196f3}
+.btn3{background:#4caf50}
+
+input[type=range]{width:100%}
+.legend-item{display:flex;align-items:center;margin:6px 0}
+.legend-color{width:16px;height:16px;border-radius:50%;margin-right:8px}
 </style>
 </head>
 
 <body>
 
-<div id="header">
-🔥 Recolección Quemas de la Cobertura Vegetal
-</div>
+<div id="header">🔥 Dashboard Quemas Vegetales</div>
 
 <div id="container">
 
-    <!-- PANEL IZQUIERDO -->
-    <div id="leftPanel">
+<!-- PANEL IZQUIERDO -->
+<div id="leftPanel">
 
-        <button onclick="cargarDatos()" style="width:100%;padding:10px;background:#ff6d00;border:none;color:white;font-weight:bold;cursor:pointer;">
-            Actualizar Visor
-        </button>
+<button class="btn1" onclick="render()">Actualizar Filtros</button>
+<button class="btn2" onclick="downloadGeoJSON()">Descargar GeoJSON</button>
+<button class="btn3" onclick="downloadCSV()">Descargar CSV</button>
 
-        <button onclick="descargarGeoJSON()" style="width:100%;padding:10px;background:#2196f3;border:none;color:white;font-weight:bold;cursor:pointer;">
-            Descargar GeoJSON
-        </button>
+<div class="panelTitle">Indicadores</div>
 
-        <button onclick="descargarCSV()" style="width:100%;padding:10px;background:#4caf50;border:none;color:white;font-weight:bold;cursor:pointer;">
-            Descargar CSV
-        </button>
+<div class="card">Total <div id="total" class="stat">0</div></div>
+<div class="card">Temp Máx <div id="tmax" class="stat">0</div></div>
+<div class="card">Rad Máx <div id="rmax" class="stat">0</div></div>
+<div class="card">Alta Confianza <div id="alta" class="stat">0</div></div>
 
-        <div class="panelTitle">Indicadores</div>
+<div class="panelTitle">Filtros</div>
 
-        <div class="card">
-            <div>Total Eventos</div>
-            <div id="totalEventos" class="stat">0</div>
-        </div>
+<label>Temp mínima <span id="tval">40</span></label>
+<input type="range" id="tmin" min="40" max="120" value="40">
 
-        <div class="card">
-            <div>Temperatura Máxima</div>
-            <div id="tempMax" class="stat">0 °C</div>
-        </div>
+<label>Radiación mínima <span id="rval">0</span></label>
+<input type="range" id="rmin" min="0" max="50" value="0">
 
-        <div class="card">
-            <div>Radiación Máxima</div>
-            <div id="radMax" class="stat">0 MW</div>
-        </div>
+</div>
 
-        <div class="card">
-            <div>Confianza Alta</div>
-            <div id="alta" class="stat">0</div>
-        </div>
+<!-- MAPA -->
+<div id="map"></div>
 
-        <div class="panelTitle">Filtros</div>
+<!-- PANEL DERECHO -->
+<div id="rightPanel">
 
-        <div class="filter-group">
-            <label>Temperatura mínima:</label>
-            <span id="tempValue">40</span> °C
-            <input type="range" id="tempSlider" min="40" max="120" value="40">
-        </div>
+<div class="panelTitle">Leyenda</div>
 
-        <br>
+<div class="legend-item"><div class="legend-color" style="background:#FFD54F"></div>40-50°C</div>
+<div class="legend-item"><div class="legend-color" style="background:#FF9800"></div>50-70°C</div>
+<div class="legend-item"><div class="legend-color" style="background:#F44336"></div>70-90°C</div>
+<div class="legend-item"><div class="legend-color" style="background:#7F0000"></div>>90°C</div>
 
-        <div class="filter-group">
-            <label>Radiación mínima:</label>
-            <span id="radValue">0</span> MW
-            <input type="range" id="radSlider" min="0" max="50" value="0">
-        </div>
-
-    </div>
-    <!-- FIN PANEL IZQUIERDO -->
-
-    <!-- MAPA -->
-    <div id="map"></div>
-
-    <!-- PANEL DERECHO -->
-    <div id="rightPanel">
-
-        <div class="panelTitle">Leyenda Temperatura</div>
-
-        <div class="legend-item">
-            <div class="legend-color" style="background:#FFD54F"></div>
-            40 - 50 °C
-        </div>
-
-        <div class="legend-item">
-            <div class="legend-color" style="background:#FF9800"></div>
-            50 - 70 °C
-        </div>
-
-        <div class="legend-item">
-            <div class="legend-color" style="background:#F44336"></div>
-            70 - 90 °C
-        </div>
-
-        <div class="legend-item">
-            <div class="legend-color" style="background:#7F0000"></div>
-            > 90 °C
-        </div>
-
-        <hr>
-
-        <div class="panelTitle">Interpretación</div>
-
-        <p>El tamaño del símbolo representa la intensidad de la radiación.</p>
-        <p>El color representa la temperatura detectada.</p>
-        <p>Los clusters agrupan eventos cercanos.</p>
-
-    </div>
-    <!-- FIN PANEL DERECHO -->
+</div>
 
 </div>
 
 <script>
 
+/* =========================
+   MAPA
+========================= */
+const map = L.map("map").setView([1.5,-74.5],7);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+const cluster = L.markerClusterGroup();
+map.addLayer(cluster);
+
+/* =========================
+   DATOS CACHE
+========================= */
+const URL = "https://carturo1585-droid.github.io/GeoportalQuemas/datos.geojson";
+
 let geojsonCache = null;
-    
-// Inicialización del mapa
-const map = L.map('map',{zoomControl:true}).setView([1.5,-74.5],7);
+let filtered = [];
 
-// Definición de capas base  
-const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OpenStreetMap'});
-const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri'});
-const sobrio = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'CartoDB'});
+/* =========================
+   UTILIDADES
+========================= */
+const getNum = v => isNaN(Number(v)) ? null : Number(v);
 
-// Agregar solo OSM como capa inicial
-osm.addTo(map); // siempre carga OSM como base inicial
-setTimeout(() => {
-    map.invalidateSize();
-}, 500);
-// Capa de clusters
-let clusterLayer = L.markerClusterGroup();
-map.addLayer(clusterLayer);
-
-// Capas base disponibles en el control
-const baseMaps = {
-  "OpenStreetMap": osm,
-  "Satélite": satelite,
-  "Cartografía Sobria": sobrio
-};
-
-// Capas superpuestas
-const overlayMaps = {
-  "Puntos de calor": clusterLayer
-};
-
-// Control de capas
-L.control.layers(baseMaps, overlayMaps).addTo(map);
-
-// URL del servicio WFS
-const WFS_URL = 'https://carturo1585-droid.github.io/GeoportalQuemas/datos.geojson';
-
-// Funciones auxiliares para color y tamaño
-function getColor(temp){if(temp>90) return '#7F0000';if(temp>70) return '#F44336';if(temp>50) return '#FF9800';return '#FFD54F';}
-function getSize(rad){if(rad>50) return 32;if(rad>20) return 24;if(rad>10) return 18;return 12;}
-
-// Variable global para descargas
-let filteredFeatures = [];
-
-// Función principal para cargar datos
-async function cargarDatos(){
-
-    try{
-
-        clusterLayer.clearLayers();
-        filteredFeatures = [];
-
-        const tempMin = Number(document.getElementById("tempSlider").value);
-        const radMin = Number(document.getElementById("radSlider").value);
-
-        const response = await fetch(WFS_URL);
-
-        if(!response.ok){
-            throw new Error("No se pudo cargar el GeoJSON");
-        }
-        
-        const geojson = await response.json();
-        geojsonCache = geojson;
-        
-        console.log("Primer registro:", geojson.features[0].properties);  
-        console.log("Registros cargados:", geojson.features.length);
-
-        let total = 0;
-        let tempMax = -Infinity;
-        let radMax = -Infinity;
-        let alta = 0;
-
-        geojson.features.forEach(f=>{
-
-            const p = f.properties;
-
-            const temp = Number(
-                String(p.Temperatur).replace(",",".")
-            );
-
-            const rad = Number(
-                String(p["Radiación"]).replace(",",".")
-            );
-
-            if(temp < tempMin) return;
-            if(rad < radMin) return;
-
-            const coords = f.geometry.coordinates;
-            const lon = coords[0];
-            const lat = coords[1];
-
-            if(isNaN(lat) || isNaN(lon)) return;
-
-            filteredFeatures.push(f);
-
-            total++;
-
-            if(temp > tempMax) tempMax = temp;
-            if(rad > radMax) radMax = rad;
-
-            if(
-                String(p.Confianza)
-                .toUpperCase()
-                .includes("ALTA")
-            ){
-                alta++;
-            }
-
-            const color = getColor(temp);
-            const size = getSize(rad);
-
-            const icon = L.divIcon({
-                html: `
-                <div class="fire-marker"
-                     style="
-                     width:${size}px;
-                     height:${size}px;
-                     border-radius:50%;
-                     background:${color};
-                     border:2px solid white;
-                     box-shadow:
-                     0 0 10px ${color},
-                     0 0 20px ${color},
-                     0 0 35px ${color};">
-                </div>`,
-                className:'',
-                iconSize:[size,size]
-            });
-
-            const marker = L.marker([lat, lon], {icon});
-
-            marker.bindPopup(`
-                <b>Fecha:</b> ${p.fecha_utc}<br>
-                <b>Fuente:</b> ${p.Fuente}<br>
-                <b>Temperatura:</b> ${temp} °C<br>
-                <b>Radiación:</b> ${rad} MW<br>
-                <b>Confianza:</b> ${p.Confianza}<br>
-                <b>Área Escaneo:</b> ${p.scan_area}<br>
-                <b>Track:</b> ${p.track_re}
-            `);
-
-            marker.bindTooltip(
-                `${temp} °C | ${rad} MW`,
-                {direction:'top'}
-            );
-            console.log(
-              "Punto:",
-                lat,
-                lon,
-               temp,
-                rad
-                 
-            );
-            clusterLayer.addLayer(marker);
-
-        });
-       
-        if (total === 0) {
-           document.getElementById("totalEventos").innerHTML = 0;
-           document.getElementById("tempMax").innerHTML = "0 °C";
-           document.getElementById("radMax").innerHTML = "0 MW";
-           document.getElementById("alta").innerHTML = 0;
-        }else {
-           document.getElementById("totalEventos").innerHTML = total;
-           document.getElementById("tempMax").innerHTML = tempMax + " °C";
-           document.getElementById("radMax").innerHTML = radMax + " MW";
-           document.getElementById("alta").innerHTML = alta;
-         }
-        if(clusterLayer.getLayers().length > 0){
-
-            const bounds = clusterLayer.getBounds();
-
-            if(bounds.isValid()){
-                console.log("Marcadores cargados:", clusterLayer.getLayers().length);
-                map.fitBounds(bounds,{
-                    padding:[20,20],
-                    maxZoom:12
-                });
-
-            }
-        }
-
-    }catch(error){
-
-        console.error(error);
-
-        alert(
-            "Error cargando datos: " +
-            error.message
-        );
-    }
+function color(temp){
+if(temp>90) return "#7F0000";
+if(temp>70) return "#F44336";
+if(temp>50) return "#FF9800";
+return "#FFD54F";
 }
-function aplicarFiltros() {
-    cargarDatos();
+
+/* =========================
+   CARGA INICIAL
+========================= */
+async function loadData(){
+
+if(geojsonCache) return;
+
+const res = await fetch(URL);
+geojsonCache = await res.json();
+
+render();
 }
-// Actualizar valores de sliders en tiempo real
-document.getElementById("tempSlider").addEventListener("input",e=>{
-    document.getElementById("tempValue").innerHTML = e.target.value;
-    aplicarFiltros();
+
+/* =========================
+   RENDER (SIN FETCH)
+========================= */
+function render(){
+
+if(!geojsonCache) return;
+
+cluster.clearLayers();
+filtered = [];
+
+const tmin = Number(tminInput.value);
+const rmin = Number(rminInput.value);
+
+let total=0, tmax=-Infinity, rmax=-Infinity, alta=0;
+
+for(const f of geojsonCache.features){
+
+const p = f.properties || {};
+const c = f.geometry?.coordinates;
+
+if(!c) continue;
+
+const lat = c[1];
+const lon = c[0];
+
+let temp = getNum(p.Temperatura ?? p.Temperatur ?? p.temp);
+let rad  = getNum(p.Radiacion ?? p["Radiación"] ?? p.rad);
+
+if(temp===null || rad===null) continue;
+if(temp<tmin || rad<rmin) continue;
+
+total++;
+tmax = Math.max(tmax,temp);
+rmax = Math.max(rmax,rad);
+
+if(String(p.Confianza||"").toLowerCase().includes("alta")) alta++;
+
+const marker = L.circleMarker([lat,lon],{
+radius: rad>50?10:6,
+color: color(temp),
+fillOpacity:0.8
 });
 
-document.getElementById("radSlider").addEventListener("input",e=>{
-    document.getElementById("radValue").innerHTML = e.target.value;
-    aplicarFiltros();
+marker.bindPopup(`
+<b>Temp:</b> ${temp}°C<br>
+<b>Rad:</b> ${rad}
+`);
+
+cluster.addLayer(marker);
+
+filtered.push(f);
+}
+
+/* UI */
+totalEl.textContent = total;
+tmaxEl.textContent = isFinite(tmax)?tmax:0;
+rmaxEl.textContent = isFinite(rmax)?rmax:0;
+altaEl.textContent = alta;
+
+if(cluster.getLayers().length){
+map.fitBounds(cluster.getBounds(),{padding:[20,20]});
+}
+}
+
+/* =========================
+   DESCARGAS
+========================= */
+function downloadGeoJSON(){
+if(!filtered.length) return alert("Sin datos");
+const blob = new Blob([JSON.stringify({type:"FeatureCollection",features:filtered})]);
+const a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="filtrado.geojson";
+a.click();
+}
+
+function downloadCSV(){
+if(!filtered.length) return alert("Sin datos");
+
+let csv="lat,lon,temp,rad\n";
+
+for(const f of filtered){
+const c=f.geometry.coordinates;
+const p=f.properties||{};
+csv+=`${c[1]},${c[0]},${p.Temperatura||""},${p.Radiacion||""}\n`;
+}
+
+const a=document.createElement("a");
+a.href=URL.createObjectURL(new Blob([csv]));
+a.download="filtrado.csv";
+a.click();
+}
+
+/* =========================
+   SLIDERS (SIN RECARGA)
+========================= */
+const tminInput=document.getElementById("tmin");
+const rminInput=document.getElementById("rmin");
+
+const tval=document.getElementById("tval");
+const rval=document.getElementById("rval");
+
+const totalEl=document.getElementById("total");
+const tmaxEl=document.getElementById("tmax");
+const rmaxEl=document.getElementById("rmax");
+const altaEl=document.getElementById("alta");
+
+tminInput.oninput=()=>{tval.textContent=tminInput.value;render();}
+rminInput.oninput=()=>{rval.textContent=rminInput.value;render();}
+
+/* INIT */
+window.addEventListener("load", async ()=>{
+await loadData();
+map.invalidateSize();
 });
 
-// Función para descargar como GeoJSON
-function descargarGeoJSON(){
-    if(filteredFeatures.length === 0){
-        alert("No hay datos filtrados para descargar.");
-        return;
-    }
-    const blob = new Blob([JSON.stringify({
-        type:"FeatureCollection",
-        features:filteredFeatures
-    })], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "datos_filtrados.geojson";
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-// Función para descargar como CSV
-function descargarCSV(){
-    if(filteredFeatures.length === 0){
-        alert("No hay datos filtrados para descargar.");
-        return;
-    }
-    let csv = "Lat,Lon,Temperatura,Radiación,Confianza,Fecha,Fuente\n";
-    filteredFeatures.forEach(f=>{
-        const p = f.properties;
-        csv += `${p.Lat},${p.Lon},${p.Temperatur},${p["Radiación"]},${p.Confianza},${p.fecha_utc},${p.Fuente}\n`;
-    });
-    const blob = new Blob([csv], {type:"text/csv"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "datos_filtrados.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-// Cargar datos iniciales al abrir
-cargarDatos();
 </script>
 
 </body>
