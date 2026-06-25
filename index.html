@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboard Quemas Vegetales</title>
+<title>Quemas de Coberturas Vegetales</title>
 
 <link rel="stylesheet" href="libs/leaflet.css">
 <link rel="stylesheet" href="libs/MarkerCluster.css">
@@ -39,7 +39,7 @@ input[type=range]{width:100%}
 
 <body>
 
-<div id="header">🔥 Dashboard Quemas Vegetales</div>
+<div id="header">🔥 Quemas de Coberturas Vegetales</div>
 
 <div id="container">
 
@@ -92,7 +92,7 @@ const cluster = L.markerClusterGroup();
 map.addLayer(cluster);
 
 /* ================= DATA ================= */
-const URL = "./datos.geojson";
+const URL = "https://carturo1585-droid.github.io/GeoportalQuemas/datos.geojson";
 
 let geojsonCache = null;
 let filtered = [];
