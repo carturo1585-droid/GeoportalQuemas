@@ -22,7 +22,11 @@ html,body{margin:0;padding:0;height:100%;font-family:"Segoe UI",sans-serif;backg
 #container{display:flex;height:calc(100% - 70px);}
 #leftPanel{width:320px;background:rgba(20,20,20,.96);color:white;overflow:auto;padding:15px;box-sizing:border-box;border-right:2px solid #ff6d00;}
 #rightPanel{width:260px;background:rgba(20,20,20,.96);color:white;overflow:auto;padding:15px;box-sizing:border-box;border-left:2px solid #ff6d00;}
-#map{flex:1;}
+#map{
+    flex:1;
+    height:100%;
+    min-height:600px;
+}
 .panelTitle{font-size:18px;font-weight:bold;margin-bottom:10px;color:#ff9800;}
 .card{background:#222;border-left:4px solid #ff5722;padding:10px;margin-bottom:10px;border-radius:4px;}
 .stat{font-size:24px;font-weight:bold;color:#ffeb3b;}
@@ -37,50 +41,107 @@ input[type=range]{width:100%;}
 </head>
 
 <body>
-<div id="header">🔥 Recolección Quemas de la Cobertura Vegetal</div>
+
+<div id="header">
+🔥 Recolección Quemas de la Cobertura Vegetal
+</div>
+
 <div id="container">
 
-<!-- Panel izquierdo: botones, indicadores y filtros -->
-<div id="leftPanel">
-<button onclick="cargarDatos()" style="width:100%;padding:10px;background:#ff6d00;border:none;color:white;font-weight:bold;cursor:pointer;">Actualizar Visor</button>
-<button onclick="descargarGeoJSON()" style="width:100%;padding:10px;background:#2196f3;border:none;color:white;font-weight:bold;cursor:pointer;">Descargar GeoJSON</button>
-<button onclick="descargarCSV()" style="width:100%;padding:10px;background:#4caf50;border:none;color:white;font-weight:bold;cursor:pointer;">Descargar CSV</button>
+    <!-- PANEL IZQUIERDO -->
+    <div id="leftPanel">
 
-<div class="panelTitle">Indicadores</div>
-<div class="card"><div>Total Eventos</div><div id="totalEventos" class="stat">0</div></div>
-<div class="card"><div>Temperatura Máxima</div><div id="tempMax" class="stat">0 °C</div></div>
-<div class="card"><div>Radiación Máxima</div><div id="radMax" class="stat">0 MW</div></div>
-<div class="card"><div>Confianza Alta</div><div id="alta" class="stat">0</div></div>
+        <button onclick="cargarDatos()" style="width:100%;padding:10px;background:#ff6d00;border:none;color:white;font-weight:bold;cursor:pointer;">
+            Actualizar Visor
+        </button>
 
-<div class="panelTitle">Filtros</div>
-<div class="filter-group">
-  <label for="tempSlider">Temperatura mínima:</label>
-  <span id="tempValue">40</span> °C
-  <input type="range" id="tempSlider" min="40" max="120" value="40">
-</div>
-<br>
-<div class="filter-group">
-  <label for="radSlider">Radiación mínima:</label>
-  <span id="radValue">5</span> MW
-  <input type="range" id="radSlider" min="0" max="50" value="5">
-</div>
+        <button onclick="descargarGeoJSON()" style="width:100%;padding:10px;background:#2196f3;border:none;color:white;font-weight:bold;cursor:pointer;">
+            Descargar GeoJSON
+        </button>
 
-<!-- Mapa principal -->
-<div id="map"></div>
+        <button onclick="descargarCSV()" style="width:100%;padding:10px;background:#4caf50;border:none;color:white;font-weight:bold;cursor:pointer;">
+            Descargar CSV
+        </button>
 
-<!-- Panel derecho: leyenda e interpretación -->
-<div id="rightPanel">
-<div class="panelTitle">Leyenda Temperatura</div>
-<div class="legend-item"><div class="legend-color" style="background:#FFD54F"></div>40 - 50 °C</div>
-<div class="legend-item"><div class="legend-color" style="background:#FF9800"></div>50 - 70 °C</div>
-<div class="legend-item"><div class="legend-color" style="background:#F44336"></div>70 - 90 °C</div>
-<div class="legend-item"><div class="legend-color" style="background:#7F0000"></div>> 90 °C</div>
-<hr>
-<div class="panelTitle">Interpretación</div>
-<p>El tamaño del símbolo representa la intensidad de la radiación (MW).</p>
-<p>El color representa la temperatura detectada por el sensor satelital.</p>
-<p>Los clusters agrupan eventos cercanos.</p>
-</div>
+        <div class="panelTitle">Indicadores</div>
+
+        <div class="card">
+            <div>Total Eventos</div>
+            <div id="totalEventos" class="stat">0</div>
+        </div>
+
+        <div class="card">
+            <div>Temperatura Máxima</div>
+            <div id="tempMax" class="stat">0 °C</div>
+        </div>
+
+        <div class="card">
+            <div>Radiación Máxima</div>
+            <div id="radMax" class="stat">0 MW</div>
+        </div>
+
+        <div class="card">
+            <div>Confianza Alta</div>
+            <div id="alta" class="stat">0</div>
+        </div>
+
+        <div class="panelTitle">Filtros</div>
+
+        <div class="filter-group">
+            <label>Temperatura mínima:</label>
+            <span id="tempValue">40</span> °C
+            <input type="range" id="tempSlider" min="40" max="120" value="40">
+        </div>
+
+        <br>
+
+        <div class="filter-group">
+            <label>Radiación mínima:</label>
+            <span id="radValue">0</span> MW
+            <input type="range" id="radSlider" min="0" max="50" value="0">
+        </div>
+
+    </div>
+    <!-- FIN PANEL IZQUIERDO -->
+
+    <!-- MAPA -->
+    <div id="map"></div>
+
+    <!-- PANEL DERECHO -->
+    <div id="rightPanel">
+
+        <div class="panelTitle">Leyenda Temperatura</div>
+
+        <div class="legend-item">
+            <div class="legend-color" style="background:#FFD54F"></div>
+            40 - 50 °C
+        </div>
+
+        <div class="legend-item">
+            <div class="legend-color" style="background:#FF9800"></div>
+            50 - 70 °C
+        </div>
+
+        <div class="legend-item">
+            <div class="legend-color" style="background:#F44336"></div>
+            70 - 90 °C
+        </div>
+
+        <div class="legend-item">
+            <div class="legend-color" style="background:#7F0000"></div>
+            > 90 °C
+        </div>
+
+        <hr>
+
+        <div class="panelTitle">Interpretación</div>
+
+        <p>El tamaño del símbolo representa la intensidad de la radiación.</p>
+        <p>El color representa la temperatura detectada.</p>
+        <p>Los clusters agrupan eventos cercanos.</p>
+
+    </div>
+    <!-- FIN PANEL DERECHO -->
 
 </div>
 
@@ -95,7 +156,9 @@ const sobrio = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/
 
 // Agregar solo OSM como capa inicial
 osm.addTo(map); // siempre carga OSM como base inicial
-
+setTimeout(() => {
+    map.invalidateSize();
+}, 500);
 // Capa de clusters
 let clusterLayer = L.markerClusterGroup();
 map.addLayer(clusterLayer);
@@ -127,56 +190,143 @@ let filteredFeatures = [];
 
 // Función principal para cargar datos
 async function cargarDatos(){
-    clusterLayer.clearLayers();
-    filteredFeatures = [];
-    const tempMin = Number(document.getElementById("tempSlider").value);
-    const radMin = Number(document.getElementById("radSlider").value);
-    const response = await fetch(WFS_URL);
-    const geojson = await response.json();
 
-    let total=0,tempMax=0,radMax=0,alta=0;
+    try{
 
-    geojson.features.forEach(f=>{
-        const p = f.properties;
-        const temp = Number(p.Temperatur);
-        const rad = parseFloat(String(p["Radiación"]).replace(",","."));
-        if(temp < tempMin) return;
-        if(rad < radMin) return;
-        filteredFeatures.push(f);
-        total++;
-        if(temp>tempMax) tempMax=temp;
-        if(rad>radMax) radMax=rad;
-        if(String(p.Confianza).toUpperCase().includes("ALTA")) alta++;
-        const color = getColor(temp);
-        const size = getSize(rad);
-        const icon = L.divIcon({
-            html:`<div class="fire-marker" style="width:${size}px;height:${size}px;border-radius:50%;background:${color};box-shadow:0 0 10px ${color},0 0 20px ${color},0 0 35px ${color};border:2px solid white;"></div>`,
-            className:'',iconSize:[size,size]
+        clusterLayer.clearLayers();
+        filteredFeatures = [];
+
+        const tempMin = Number(document.getElementById("tempSlider").value);
+        const radMin = Number(document.getElementById("radSlider").value);
+
+        const response = await fetch(WFS_URL);
+
+        if(!response.ok){
+            throw new Error("No se pudo cargar el GeoJSON");
+        }
+
+        const geojson = await response.json();
+        console.log("Primer registro:", geojson.features[0].properties);  
+        console.log("Registros cargados:", geojson.features.length);
+
+        let total = 0;
+        let tempMax = 0;
+        let radMax = 0;
+        let alta = 0;
+
+        geojson.features.forEach(f=>{
+
+            const p = f.properties;
+
+            const temp = Number(
+                String(p.Temperatur).replace(",",".")
+            );
+
+            const rad = Number(
+                String(p["Radiación"]).replace(",",".")
+            );
+
+            //if(temp < tempMin) return;
+            //if(rad < radMin) return;
+
+            const lat = Number(p.Lat);
+            const lon = Number(p.Lon);
+
+            if(isNaN(lat) || isNaN(lon)) return;
+
+            filteredFeatures.push(f);
+
+            total++;
+
+            if(temp > tempMax) tempMax = temp;
+            if(rad > radMax) radMax = rad;
+
+            if(
+                String(p.Confianza)
+                .toUpperCase()
+                .includes("ALTA")
+            ){
+                alta++;
+            }
+
+            const color = getColor(temp);
+            const size = getSize(rad);
+
+            const icon = L.divIcon({
+                html: `
+                <div class="fire-marker"
+                     style="
+                     width:${size}px;
+                     height:${size}px;
+                     border-radius:50%;
+                     background:${color};
+                     border:2px solid white;
+                     box-shadow:
+                     0 0 10px ${color},
+                     0 0 20px ${color},
+                     0 0 35px ${color};">
+                </div>`,
+                className:'',
+                iconSize:[size,size]
+            });
+
+            const marker = L.marker([lat, lon], {icon});
+
+            marker.bindPopup(`
+                <b>Fecha:</b> ${p.fecha_utc}<br>
+                <b>Fuente:</b> ${p.Fuente}<br>
+                <b>Temperatura:</b> ${temp} °C<br>
+                <b>Radiación:</b> ${rad} MW<br>
+                <b>Confianza:</b> ${p.Confianza}<br>
+                <b>Área Escaneo:</b> ${p.scan_area}<br>
+                <b>Track:</b> ${p.track_re}
+            `);
+
+            marker.bindTooltip(
+                `${temp} °C | ${rad} MW`,
+                {direction:'top'}
+            );
+            console.log(
+              "Punto:",
+                lat,
+                lon,
+               temp,
+                rad
+                 
+            );
+            clusterLayer.addLayer(marker);
+
         });
-       const coords = f.geometry.coordinates; // [lon, lat]
-       const marker = L.marker([coords[1], coords[0]], {icon});
-        marker.bindPopup(`
-            <b>Fecha:</b> ${p.fecha_utc}<br>
-            <b>Fuente:</b> ${p.Fuente}<br>
-            <b>Temperatura:</b> ${temp} °C<br>
-            <b>Radiación:</b> ${rad} MW<br>
-            <b>Confianza:</b> ${p.Confianza}<br>
-            <b>Área Escaneo:</b> ${p.scan_area}<br>
-            <b>Track:</b> ${p.track_re}
-        `);
 
-        // Tooltip con valores rápidos
-        marker.bindTooltip(`${temp} °C | ${rad} MW`,{direction:'top'});
-        clusterLayer.addLayer(marker);
-    });
+        document.getElementById("totalEventos").innerHTML = total;
+        document.getElementById("tempMax").innerHTML = tempMax + " °C";
+        document.getElementById("radMax").innerHTML = radMax + " MW";
+        document.getElementById("alta").innerHTML = alta;
 
-// Actualizar indicadores en panel
-    document.getElementById("totalEventos").innerHTML=total;
-    document.getElementById("tempMax").innerHTML=tempMax+" °C";
-    document.getElementById("radMax").innerHTML=radMax+" MW";
-    document.getElementById("alta").innerHTML=alta;
+        if(clusterLayer.getLayers().length > 0){
+
+            const bounds = clusterLayer.getBounds();
+
+            if(bounds.isValid()){
+                console.log("Marcadores cargados:", clusterLayer.getLayers().length);
+                map.fitBounds(bounds,{
+                    padding:[20,20],
+                    maxZoom:12
+                });
+
+            }
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "Error cargando datos: " +
+            error.message
+        );
+    }
 }
-
 // Actualizar valores de sliders en tiempo real
 document.getElementById("tempSlider").addEventListener("input",e=>{
     document.getElementById("tempValue").innerHTML=e.target.value;
