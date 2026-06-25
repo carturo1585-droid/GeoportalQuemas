@@ -44,7 +44,7 @@ button{width:100%;padding:10px;margin-bottom:8px;border:none;cursor:pointer;font
 
 <body>
 
-<div id="header">🔥 Recolección Quemas de la Cobertura Vegetal</div>
+<div id="header">🔥 Quemas de la Cobertura Vegetal</div>
 
 <div id="container">
 
@@ -70,11 +70,11 @@ Temperatura mínima: <span id="tempValue">40</span> °C
 Radiación mínima: <span id="radValue">0</span> MW
 <input type="range" id="radSlider" min="0" max="50" value="0">
 
-<div class="panelTitle">Interpretación SIG</div>
+<div class="panelTitle">Interpretación</div>
 <div class="card" style="font-size:12px;line-height:1.4;">
 Los filtros controlan qué eventos se muestran en el mapa.<br><br>
-✔ Temperatura → intensidad térmica del evento<br>
-✔ Radiación → energía detectada<br><br>
+✔ Temperatura → intensidad térmica del evento °C<br>
+✔ Radiación → energía detectada MW<br><br>
 Los indicadores se recalculan dinámicamente según los filtros aplicados.
 </div>
 
@@ -189,7 +189,20 @@ border-radius:50%;background:${color(t)};
 box-shadow:0 0 15px ${color(t)}"></div>`
 });
 
-clusterLayer.addLayer(L.marker([lat,lon],{icon}));
+const marker = L.marker([lat,lon], {icon});
+
+marker.bindPopup(`
+    <b>Fecha:</b> ${p.fecha_utc || "N/A"}<br>
+    <b>Temperatura:</b> ${t} °C<br>
+    <b>Radiación:</b> ${r} MW<br>
+    <b>Confianza:</b> ${p.Confianza || "N/A"}<br><br>
+
+    <b>📍 Coordenadas:</b><br>
+    Lat: ${lat.toFixed(6)}<br>
+    Lon: ${lon.toFixed(6)}
+`);
+
+clusterLayer.addLayer(marker);
 });
 
 // UI
