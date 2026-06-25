@@ -216,8 +216,8 @@ async function cargarDatos(){
         console.log("Registros cargados:", geojson.features.length);
 
         let total = 0;
-        let tempMax = 0;
-        let radMax = 0;
+        let tempMax = -Infinity;
+        let radMax = -Infinity;
         let alta = 0;
 
         geojson.features.forEach(f=>{
@@ -304,12 +304,18 @@ async function cargarDatos(){
             clusterLayer.addLayer(marker);
 
         });
-
-        document.getElementById("totalEventos").innerHTML = total;
-        document.getElementById("tempMax").innerHTML = tempMax + " °C";
-        document.getElementById("radMax").innerHTML = radMax + " MW";
-        document.getElementById("alta").innerHTML = alta;
-
+       
+        if (total === 0) {
+           document.getElementById("totalEventos").innerHTML = 0;
+           document.getElementById("tempMax").innerHTML = "0 °C";
+           document.getElementById("radMax").innerHTML = "0 MW";
+           document.getElementById("alta").innerHTML = 0;
+        }else {
+           document.getElementById("totalEventos").innerHTML = total;
+           document.getElementById("tempMax").innerHTML = tempMax + " °C";
+           document.getElementById("radMax").innerHTML = radMax + " MW";
+           document.getElementById("alta").innerHTML = alta;
+         }
         if(clusterLayer.getLayers().length > 0){
 
             const bounds = clusterLayer.getBounds();
