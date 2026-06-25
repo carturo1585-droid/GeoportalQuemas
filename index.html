@@ -137,12 +137,15 @@ return "#FFD54F";
 ========================= */
 async function loadData(){
 
-if(geojsonCache) return;
+    if(geojsonCache) return;
 
-const res = await fetch(URL);
-geojsonCache = await res.json();
-console.log("Features:", geojsonCache.features.length);
-render();
+    const res = await fetch(URL);
+    geojsonCache = await res.json();
+
+    console.log("Features:", geojsonCache.features.length);
+    console.log("Primer registro:", geojsonCache.features[0].properties);
+
+    render();
 }
 
 /* =========================
@@ -175,7 +178,10 @@ let rad  = getNum(p.Radiacion ?? p["Radiación"] ?? p.rad);
 
 if(temp===null || rad===null) continue;
 if(temp<tmin || rad<rmin) continue;
-
+console.log("Temp:", temp, "Rad:", rad);
+console.log("Total filtrados:", total);
+console.log("Marcadores:", cluster.getLayers().length);   
+   
 total++;
 tmax = Math.max(tmax,temp);
 rmax = Math.max(rmax,rad);
@@ -204,6 +210,9 @@ tmaxEl.textContent = isFinite(tmax)?tmax:0;
 rmaxEl.textContent = isFinite(rmax)?rmax:0;
 altaEl.textContent = alta;
 
+console.log("Total filtrados:", total);
+console.log("Marcadores:", cluster.getLayers().length);
+   
 if(cluster.getLayers().length){
 map.fitBounds(cluster.getBounds(),{padding:[20,20]});
 }
