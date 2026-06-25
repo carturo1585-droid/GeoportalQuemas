@@ -87,19 +87,20 @@ input[type=range]{width:100%;}
 <script>
 // Inicialización del mapa
 const map = L.map('map',{zoomControl:true}).setView([1.5,-74.5],7);
+
+// Definición de capas base  
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OpenStreetMap'});
 const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri'});
 const sobrio = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'CartoDB'});
 
+// Agregar solo OSM como capa inicial
 osm.addTo(map); // siempre carga OSM como base inicial
-satelite.addTo(map); // opcional, disponible en el control
-sobrio.addTo(map);   // opcional, disponible en el control
 
 // Capa de clusters
 let clusterLayer = L.markerClusterGroup();
 map.addLayer(clusterLayer);
 
-// Capas base
+// Capas base disponibles en el control
 const baseMaps = {
   "OpenStreetMap": osm,
   "Satélite": satelite,
