@@ -12,7 +12,7 @@ Este proyecto permite visualizar eventos de calor detectados por sensores sateli
 
 ## Uso académico
 Este repositorio se publica con fines académicos y de demostración.  
-Los datos pueden ser reemplazados o actualizados según nuevas fuentes en PostgreSQL/PostGIS.
+Los datos pueden ser reemplazados o actualizados según nuevas fuentes.
 
 ## Licencia
 Este proyecto está bajo la licencia MIT.  
